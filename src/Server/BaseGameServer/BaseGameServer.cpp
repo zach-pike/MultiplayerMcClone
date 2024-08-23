@@ -1,0 +1,44 @@
+#include "BaseGameServer.hpp"
+
+void BaseGameServer::acceptConnection() {
+    acceptor.async_accept([&](asio::error_code ec, asio::ip::tcp::socket sock) {
+        if (ec) {
+            // Error
+            std::cout << "Acceptor Error!\n";
+
+            acceptConnection();
+        }
+
+        // No error
+        connections.push_back(std::make_shared<Client>(std::move(sock)));
+
+        acceptConnection();
+    });
+}
+
+BaseGameServer::BaseGameServer(std::uint16_t port):
+    acceptor(ctx, asio::ip::tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), port)) {}
+
+BaseGameServer::~BaseGameServer() {}
+
+void BaseGameServer::start() {
+    acceptConnection();
+
+    networkThread = std::thread([&]() { ctx.run(); });
+}
+
+void BaseGameServer::stop() {
+    ctx.stop();
+    networkThread.join();
+}
+
+void BaseGameServer::broadcast(const Message& msg) {
+    // Send message to all clients
+    for (auto& client : connections) {
+        client->sendMessage(msg);
+    }
+}
+
+std::vector<std::shared_ptr<Client>> BaseGameServer::getClients() {
+    return connections;
+}
