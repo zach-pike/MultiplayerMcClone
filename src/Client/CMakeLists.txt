@@ -11,4 +11,9 @@ target_include_directories(Client AFTER PUBLIC ../../lib/)
 target_include_directories(Client AFTER PUBLIC .)
 
 target_link_directories(Client BEFORE PUBLIC ../)
-target_link_libraries(Client glad glfw3 OpenGL::GL STBImage IMGui ASIO wsock32 ws2_32 bcrypt Common)
+
+IF(WIN32)
+    target_link_libraries(Client glad glfw OpenGL::GL STBImage ASIO wsock32 ws2_32 bcrypt Common)
+else()
+    target_link_libraries(Client glad glfw OpenGL::GL STBImage ASIO Common)
+endif()
