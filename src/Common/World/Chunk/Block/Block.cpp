@@ -6,3 +6,7 @@ Block::Block():
 Block::Block(BlockIDType b) {
     blockID = b;
 }
+
+bool Block::operator==(const Block& block) const {
+    return block.blockID == blockID;
+}

@@ -7,7 +7,7 @@
 
 #include <thread>
 
-#include "BaseGameClient/BaseGameClient.hpp"
+#include "Utility/BaseGameClient/BaseGameClient.hpp"
 
 class Game : public App {
 private:

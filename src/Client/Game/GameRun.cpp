@@ -7,16 +7,18 @@
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
 
-#include "Utility/GL/ShaderProgram/ShaderProgram.hpp"
 #include "Utility/GL/VertexArray/VertexArray.hpp"
 #include "Utility/GL/Buffer/Buffer.hpp"
 
 #include "CameraControllers/FreecamController/FreecamController.hpp"
-#include "MyUtility/ShaderLoaders/VertexFragment/VertexFragment.hpp"
+
+#include "WorldRenderInfo/WorldRenderInfo.hpp"
 
 #include <iostream>
 #include <exception>
 #include <functional>
+
+#include "Subclasses/DrawableWorld/DrawableWorld.hpp"
 
 void Game::init() {
     if (!glfwInit()) {
@@ -45,6 +47,8 @@ void Game::init() {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     const char* vendor = (char*)glGetString(GL_VENDOR); // Returns the vendor
     const char* renderer = (char*)glGetString(GL_RENDERER); // Returns a hint to the model
@@ -57,21 +61,18 @@ void Game::loop() {
     VertexArray vao;
     vao.bindVertexArray();
 
-    // Simple buffer
-    Buffer<glm::vec3> vertexBuffer;
-    Buffer<glm::vec3> colorBuffer;
-
     // Camera stuff
-    FreecamController cameraController(glm::vec3(4, 5, 0));
+    FreecamController cameraController(glm::vec3(0, 0, -5));
 
-    // Object shader
-    auto objectShader = loadVertexFragmentShader("./shader/object/");
-    GLuint objectViewProjectionUniform = objectShader->getUniformLocation("viewProjection");
+    auto worldRenderInfo = std::make_unique<WorldRenderInfo>();
+    auto world           = std::make_unique<DrawableWorld>();
+
+    world->generateWorld();
+
+    world->drawWorld();
 
     char hostIPAddress[20] = "127.0.0.1";
     int  hostPort = 1500;
-
-    std::size_t nVerts = 0;
 
     double lastFrameStartTime = glfwGetTime();
     float aspectRatio;
@@ -123,8 +124,15 @@ void Game::loop() {
                 }
             }
 
+            if (ImGui::Button("Reload shaders")) {
+                worldRenderInfo->reloadShaders();
+            }
+
             ImGui::End();
         }
+
+        // render world
+        world->renderWorld(worldRenderInfo, viewProjection);
 
         if (client.isConnected()) {
             ImGui::Begin("Server menu");
@@ -135,34 +143,12 @@ void Game::loop() {
 
             ImGui::End();
         }
-        objectShader->use();
-        glUniformMatrix4fv(objectViewProjectionUniform, 1, GL_FALSE, &viewProjection[0][0]);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.getBufferId());
-        glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-		// glBindBuffer(GL_ARRAY_BUFFER, colorBuffer.getBufferId());
-        // glEnableVertexAttribArray(1);
-		// glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-        // Render objects
-        glDrawArrays(GL_TRIANGLES, 0, nVerts);
-
-        glDisableVertexAttribArray(0);
-        // glDisableVertexAttribArray(1);
 
         // Check client for messages
         while(client.isMessageAvailable()) {
             Message m = client.getMessage();
 
-            switch(m.id) {
-                case 1337: {
-                    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer.getBufferId());
-                    glBufferData(GL_ARRAY_BUFFER, m.data.size(), m.data.data(), GL_STATIC_DRAW);
-                    nVerts = m.data.size() / sizeof(float);
-                } break;
-            }
+            switch(m.id) {}
         }
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

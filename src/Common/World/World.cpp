@@ -20,10 +20,10 @@ void World::setBlock(Position pos, Block block) {
                    pos.y % Chunk::ChunkY,
                    pos.z % Chunk::ChunkZ };
     
-    chunks.at(c).setBlock(p, block);
+    chunks.at(c)->setBlock(p, block);
 }
 
-Block World::getBlock(Position pos) {
+Block World::getBlock(Position pos) const {
     // get chunk position
     ChunkCoordinates c = { pos.x / Chunk::ChunkX,
                            pos.y / Chunk::ChunkY,
@@ -33,10 +33,8 @@ Block World::getBlock(Position pos) {
                    pos.y % Chunk::ChunkY,
                    pos.z % Chunk::ChunkZ };
 
-    return chunks.at(c).getBlock(p);
+    return chunks.at(c)->getBlock(p);
 }
-
-
 
 std::vector<std::uint8_t> World::serialize() {
     // ORDER OF SERIALIZED FORM
@@ -57,7 +55,7 @@ std::vector<std::uint8_t> World::serialize() {
         chunkPositions[i * 3 + 1] = pos.y;
         chunkPositions[i * 3 + 2] = pos.z;
 
-        chunkData[i] = kv.second.serialize();
+        chunkData[i] = kv.second->serialize();
 
         i++;
     }
@@ -115,8 +113,8 @@ void World::deserialize(const std::vector<std::uint8_t>& data) {
 
     // Insert chunks into world
     for (int i=0; i<s.numberOfChunks; i++) {
-        Chunk c;
-        c.deserialize(&chunkData[i * Chunk::ChunkSerializedSize]);
+        auto c = std::make_shared<Chunk>();
+        c->deserialize(&chunkData[i * Chunk::ChunkSerializedSize]);
         
         chunks.insert({ chunkPositions[i], std::move(c) });
     }
@@ -141,4 +139,8 @@ void World::generateWorld() {
             c.setBlock(Position{ x, 15, z }, Block(1));
         }
     }
+}
+
+const std::map<ChunkCoordinates, std::shared_ptr<Chunk>>& World::getChunks() const {
+    return chunks;
 }

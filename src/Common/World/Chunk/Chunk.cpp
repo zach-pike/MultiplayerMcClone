@@ -7,11 +7,11 @@ Chunk::Chunk() {}
 Chunk::~Chunk() {}
 
 void Chunk::setBlock(Position pos, Block block) {
-    blocks.at(pos.x + pos.z * Chunk::ChunkX + pos.y * Chunk::ChunkX * Chunk::ChunkZ) = block;
+    blocks.at(ChunkIndexFormula(Chunk::ChunkX, Chunk::ChunkZ, pos.x, pos.y, pos.z)) = block;
 }
 
 Block Chunk::getBlock(Position pos) {
-    return blocks.at(pos.x + pos.z * Chunk::ChunkX + pos.y * Chunk::ChunkX * Chunk::ChunkZ);
+    return blocks.at(ChunkIndexFormula(Chunk::ChunkX, Chunk::ChunkZ, pos.x, pos.y, pos.z));
 }
 
 std::vector<std::uint8_t> Chunk::serialize() {

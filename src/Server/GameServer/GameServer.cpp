@@ -63,8 +63,6 @@ void GameServer::start() {
         while(messageHandlerThreadRunning) {
             auto& clients = BaseGameServer::getClients();
 
-            // std::cout << clients.size() << '\n';
-
             for (int i=0; i < clients.size(); i++) {
                 auto& conn = clients[i];
 

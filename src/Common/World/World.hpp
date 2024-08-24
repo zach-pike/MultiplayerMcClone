@@ -4,6 +4,7 @@
 #include "GameTypes/GameTypes.hpp"
 
 #include <map>
+#include <memory>
 #include <vector>
 
 class World {
@@ -13,17 +14,19 @@ public:
 
         SerializedWorldInformation(int nChunks);
     };
-private:
-    std::map<ChunkCoordinates, Chunk> chunks;
+protected:
+    std::map<ChunkCoordinates, std::shared_ptr<Chunk>> chunks;
 public:
     World();
     ~World();
 
-    void setBlock(Position pos, Block blockType);
-    Block getBlock(Position pos);
+    virtual void setBlock(Position pos, Block blockType);
+    virtual Block getBlock(Position pos) const;
 
     std::vector<std::uint8_t> serialize();
     void deserialize(const std::vector<std::uint8_t>&);
 
-    void generateWorld();
+    virtual void generateWorld();
+
+    const std::map<ChunkCoordinates, std::shared_ptr<Chunk>>& getChunks() const;
 };
