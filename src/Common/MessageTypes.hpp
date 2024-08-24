@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
 
 using MessageIDType = std::uint32_t;
 
@@ -10,11 +11,18 @@ struct Message {
     std::vector<std::uint8_t> data;
 
     Message() {}
-
+    Message(MessageIDType _id) {
+        id = _id;
+    }
+    Message(MessageIDType _id, const std::vector<std::uint8_t>& _data) {
+        id = _id;
+        data = _data;
+    }
     Message(MessageIDType _id, std::string str) {
         id = _id;
         data = std::vector<std::uint8_t>(str.begin(), str.end());
     }
+
 };
 
 struct MessageHeader {
@@ -22,7 +30,6 @@ struct MessageHeader {
     std::uint32_t dataSize;
 
     MessageHeader() {}
-
     MessageHeader(const Message& msg) {
         id = msg.id;
         dataSize = msg.data.size();

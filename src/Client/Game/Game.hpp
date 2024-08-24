@@ -7,12 +7,16 @@
 
 #include <thread>
 
-class MyApp : public App {
+#include "BaseGameClient/BaseGameClient.hpp"
+
+class Game : public App {
 private:
     // Thread state do not modify pls thx
     GLFWwindow* window;
 
     std::thread renderThread;
+
+    BaseGameClient client;
 
     void init();
     void loop();
@@ -20,8 +24,8 @@ private:
 
     void runGame();
 public:
-    MyApp();
-    ~MyApp();
+    Game();
+    ~Game();
 
     void start();
     void join();

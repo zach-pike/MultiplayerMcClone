@@ -2,6 +2,11 @@
 
 void Client::readHeader() {
     asio::async_read(sock, asio::buffer((std::uint8_t*)&_incHeader, sizeof(MessageHeader)), [&](asio::error_code ec, std::size_t len) {
+        if (ec) {
+            socketOpen = false;
+            return;
+        }
+        
         readPayload();
     });
 }
@@ -11,6 +16,11 @@ void Client::readPayload() {
     _incPayload.resize(_incHeader.dataSize);
 
     asio::async_read(sock, asio::buffer(_incPayload.data(), _incPayload.size()), [&](asio::error_code ec, std::size_t len) {
+        if (ec) {
+            socketOpen = false;
+            return;
+        }
+
         Message m;
         m.id = _incHeader.id;
         m.data = _incPayload;
@@ -33,10 +43,26 @@ Client::Client(asio::ip::tcp::socket _sock):
 Client::~Client() {}
 
 void Client::sendMessage(const Message& msg) {
+    if (!socketOpen) throw std::runtime_error("Connection closed");
+    
     MessageHeader hdr(msg);
 
-    sock.write_some(asio::buffer(&hdr, sizeof(hdr)));
-    sock.write_some(asio::buffer(msg.data.data(), msg.data.size()));
+    asio::error_code ec;
+    sock.write_some(asio::buffer(&hdr, sizeof(hdr)), ec);
+    if (ec) {
+        socketOpen = false;
+        return;
+    }
+
+    sock.write_some(asio::buffer(msg.data.data(), msg.data.size()), ec);
+    if (ec) {
+        socketOpen = false;
+        return;
+    }
+}
+
+bool Client::isConnected() {
+    return socketOpen;
 }
 
 bool Client::isMessageAvailable() {

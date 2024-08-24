@@ -5,5 +5,5 @@ out vec3 color;
 in vec3 finalColor;
 
 void main() {
-    color = finalColor;
+    color = vec3(0, 0, 1);
 }

@@ -39,6 +39,6 @@ void BaseGameServer::broadcast(const Message& msg) {
     }
 }
 
-std::vector<std::shared_ptr<Client>> BaseGameServer::getClients() {
+std::vector<std::shared_ptr<Client>>& BaseGameServer::getClients() {
     return connections;
 }

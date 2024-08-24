@@ -14,6 +14,8 @@ private:
     std::mutex          inMessagesQueueLock;
     std::deque<Message> inMessagesQueue;
 
+    std::atomic_bool socketOpen = true;
+
     MessageHeader _incHeader;
     std::vector<std::uint8_t> _incPayload;
 
@@ -25,6 +27,8 @@ public:
     ~Client();
 
     void sendMessage(const Message& msg);
+
+    bool isConnected();
 
     bool isMessageAvailable();
     Message getMessage();

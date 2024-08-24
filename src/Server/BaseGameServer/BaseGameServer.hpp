@@ -26,7 +26,7 @@ public:
     void start();
     void stop();
 
-    std::vector<std::shared_ptr<Client>> getClients();
+    std::vector<std::shared_ptr<Client>>& getClients();
 
     void broadcast(const Message& msg);
 };
