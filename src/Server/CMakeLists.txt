@@ -8,4 +8,4 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(Server ${SERVER_SOURCE_FILES})
 target_include_directories(Server AFTER PUBLIC .)
 
-target_link_libraries(Server STBImage ASIO wsock32 ws2_32 bcrypt)
+target_link_libraries(Server STBImage ASIO wsock32 ws2_32 bcrypt Common)
