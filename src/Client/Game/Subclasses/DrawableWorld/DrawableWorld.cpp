@@ -10,7 +10,7 @@ void DrawableWorld::convertChunksToDrawableChunks() {
         auto newChunk = std::make_shared<DrawableChunk>(currentChunk.second);
 
         // release the old chunk
-        // currentChunk.second.reset();
+        currentChunk.second.reset();
         chunks[currentChunk.first] = newChunk;
     }
 }
