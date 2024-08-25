@@ -13,7 +13,7 @@ target_include_directories(Client AFTER PUBLIC .)
 target_link_directories(Client BEFORE PUBLIC ../)
 
 IF(WIN32)
-    target_link_libraries(Client glad glfw OpenGL::GL STBImage ASIO wsock32 ws2_32 bcrypt Common)
+    target_link_libraries(Client glad glfw3 OpenGL::GL STBImage ASIO Common ImGui wsock32 ws2_32 bcrypt )
 else()
     target_link_libraries(Client glad glfw OpenGL::GL STBImage ASIO Common)
 endif()

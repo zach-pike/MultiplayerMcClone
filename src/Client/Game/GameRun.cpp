@@ -67,10 +67,6 @@ void Game::loop() {
     auto worldRenderInfo = std::make_unique<WorldRenderInfo>();
     auto world           = std::make_unique<DrawableWorld>();
 
-    world->generateWorld();
-
-    world->drawWorld();
-
     char hostIPAddress[20] = "127.0.0.1";
     int  hostPort = 1500;
 
@@ -105,8 +101,6 @@ void Game::loop() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
-        // ImGui::ShowDemoWindow();
 
         if (ImGui::Begin("Multiplayer")) {
             ImGui::InputText("Host IP", hostIPAddress, sizeof(hostIPAddress));
@@ -148,8 +142,14 @@ void Game::loop() {
         while(client.isMessageAvailable()) {
             Message m = client.getMessage();
 
-            switch(m.id) {}
+            switch(m.id) {
+                case 1337: {
+                    world->deserialize(m.data);
+                    world->drawWorld();
+                } break;
+            }
         }
+        
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

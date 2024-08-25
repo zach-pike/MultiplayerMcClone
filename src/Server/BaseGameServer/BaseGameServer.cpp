@@ -17,7 +17,7 @@ void BaseGameServer::acceptConnection() {
 }
 
 BaseGameServer::BaseGameServer(std::uint16_t port):
-    acceptor(ctx, asio::ip::tcp::endpoint(asio::ip::address::from_string("127.0.0.1"), port)) {}
+    acceptor(ctx, asio::ip::tcp::endpoint(asio::ip::address::from_string("0.0.0.0"), port)) {}
 
 BaseGameServer::~BaseGameServer() {}
 

@@ -22,8 +22,9 @@ public:
     static const int ChunkBlockCount = ChunkX * ChunkY * ChunkZ;
 
     static const std::size_t ChunkSerializedSize = ChunkBlockCount * sizeof(Block);
+    using BlockArray = std::array<Block, ChunkX * ChunkY * ChunkZ>;
 protected:
-    std::array<Block, ChunkX * ChunkY * ChunkZ> blocks;
+    BlockArray blocks;
 public:
     Chunk();
     virtual ~Chunk();
@@ -33,4 +34,6 @@ public:
 
     std::vector<std::uint8_t> serialize();
     void deserialize(const std::uint8_t*);
+
+    const BlockArray& getBlocks() const;
 };

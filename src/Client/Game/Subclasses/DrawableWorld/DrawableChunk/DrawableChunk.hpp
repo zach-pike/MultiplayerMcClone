@@ -20,8 +20,12 @@ private:
     bool meshUpToDate = false;
 
     std::size_t lastVertexCount = 0;
+
+    void initBuffers();
+    void uninitBuffers();
 public:
     DrawableChunk();
+    DrawableChunk(const std::shared_ptr<Chunk>& c);
     ~DrawableChunk();
 
     void drawChunk(ChunkCoordinates cc, const DrawableWorld&);

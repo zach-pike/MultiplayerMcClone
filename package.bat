@@ -2,6 +2,7 @@
 
 mkdir game
 cp -r shader/ game/
+cp -r resources/ game/
 
 cp glfw3.dll game/
 cp build/src/Client/Client.exe game/

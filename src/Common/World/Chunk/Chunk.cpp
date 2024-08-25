@@ -3,6 +3,8 @@
 #include <exception>
 #include <stdexcept>
 
+#include <cstring>
+
 Chunk::Chunk() {}
 Chunk::~Chunk() {}
 
@@ -15,10 +17,21 @@ Block Chunk::getBlock(Position pos) {
 }
 
 std::vector<std::uint8_t> Chunk::serialize() {
-    return std::vector<std::uint8_t>((std::uint8_t*)blocks.data(),
-                                     (std::uint8_t*)blocks.data() + blocks.size() * sizeof(Block));
+    return std::vector<std::uint8_t>(
+        reinterpret_cast<std::uint8_t*>(blocks.data()),
+        reinterpret_cast<std::uint8_t*>(blocks.data()) + blocks.size() * sizeof(Block)
+    );
 }
 
 void Chunk::deserialize(const std::uint8_t* data) {
-    std::copy((Block*)data, (Block*)data + blocks.size(), blocks.begin());
+    if (data == nullptr) {
+        throw std::invalid_argument("Null data pointer passed to Chunk::deserialize.");
+    }
+
+    // Assuming that the data buffer is guaranteed to be at least ChunkSerializedSize bytes
+    std::memcpy(blocks.data(), data, ChunkSerializedSize);
+}
+
+const Chunk::BlockArray& Chunk::getBlocks() const {
+    return blocks;
 }

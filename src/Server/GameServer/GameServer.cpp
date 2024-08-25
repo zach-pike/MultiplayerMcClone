@@ -2,51 +2,10 @@
 
 #include <thread>
 
-static float cubeVertexData[] = {
-    -1.0f,-1.0f,-1.0f,
-	-1.0f,-1.0f, 1.0f,
-	-1.0f, 1.0f, 1.0f,
-	 1.0f, 1.0f,-1.0f,
-	-1.0f,-1.0f,-1.0f,
-	-1.0f, 1.0f,-1.0f,
-	 1.0f,-1.0f, 1.0f,
-	-1.0f,-1.0f,-1.0f,
-	 1.0f,-1.0f,-1.0f,
-	 1.0f, 1.0f,-1.0f,
-	 1.0f,-1.0f,-1.0f,
-	-1.0f,-1.0f,-1.0f,
-	-1.0f,-1.0f,-1.0f,
-	-1.0f, 1.0f, 1.0f,
-	-1.0f, 1.0f,-1.0f,
-	 1.0f,-1.0f, 1.0f,
-	-1.0f,-1.0f, 1.0f,
-	-1.0f,-1.0f,-1.0f,
-	-1.0f, 1.0f, 1.0f,
-	-1.0f,-1.0f, 1.0f,
-	 1.0f,-1.0f, 1.0f,
-	 1.0f, 1.0f, 1.0f,
-	 1.0f,-1.0f,-1.0f,
-	 1.0f, 1.0f,-1.0f,
-	 1.0f,-1.0f,-1.0f,
-	 1.0f, 1.0f, 1.0f,
-	 1.0f,-1.0f, 1.0f,
-	 1.0f, 1.0f, 1.0f,
-	 1.0f, 1.0f,-1.0f,
-	-1.0f, 1.0f,-1.0f,
-	 1.0f, 1.0f, 1.0f,
-	-1.0f, 1.0f,-1.0f,
-	-1.0f, 1.0f, 1.0f,
-	 1.0f, 1.0f, 1.0f,
-	-1.0f, 1.0f, 1.0f,
-	 1.0f,-1.0f, 1.0f
-};
-
-std::vector<std::uint8_t> cubeData((std::uint8_t*)cubeVertexData, (std::uint8_t*)(cubeVertexData) + sizeof(cubeVertexData));
-
-
 GameServer::GameServer(std::uint16_t port):
-    BaseGameServer(port) {
-
+    BaseGameServer(port)
+{
+    gameWorld.generateWorld();
 }
 
 GameServer::~GameServer() {
@@ -79,8 +38,11 @@ void GameServer::start() {
 
                     switch (m.id) {
                         case 1337: {
+                            // Convert world to data
+                            std::vector<std::uint8_t> d = gameWorld.serialize();
+
                             // Send vertex data
-                            conn->sendMessage(Message(1337, cubeData));
+                            conn->sendMessage(Message(1337, d));
                         } break;
                     }
                 }

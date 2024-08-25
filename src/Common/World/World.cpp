@@ -1,6 +1,8 @@
 #include "World.hpp"
 
-#include <string.h>
+#include <cstring>
+
+World::SerializedWorldInformation::SerializedWorldInformation() {}
 
 World::SerializedWorldInformation::SerializedWorldInformation(int _nChunks) {
     numberOfChunks = _nChunks;
@@ -43,40 +45,44 @@ std::vector<std::uint8_t> World::serialize() {
     // chunk positions array
     // chunks array
 
-    // Make a table
-    int* chunkPositions = new int[chunks.size() * 3];
-    std::vector<std::uint8_t>* chunkData = new std::vector<std::uint8_t>[chunks.size()];
+    // Create chunk positions array and chunk data vector
+    std::unique_ptr<int[]> chunkPositions(new int[chunks.size() * 3]);
+    std::vector<std::vector<std::uint8_t>> chunkData(chunks.size());
 
-    int i=0;
-    for (auto& kv : chunks) {
-        auto pos = kv.first;
+    int i = 0;
+    for (const auto& kv : chunks) {
+        const auto& pos = kv.first;
 
         chunkPositions[i * 3 + 0] = pos.x;
         chunkPositions[i * 3 + 1] = pos.y;
         chunkPositions[i * 3 + 2] = pos.z;
 
         chunkData[i] = kv.second->serialize();
-
         i++;
     }
 
-    SerializedWorldInformation s(chunks.size());
+    SerializedWorldInformation s(static_cast<int>(chunks.size()));
 
     std::vector<std::uint8_t> finalByteArray;
 
     // Header
-    finalByteArray.insert(finalByteArray.end(), (std::uint8_t*)&s, (std::uint8_t*)&s + sizeof(SerializedWorldInformation));
+    finalByteArray.insert(
+        finalByteArray.end(),
+        reinterpret_cast<std::uint8_t*>(&s),
+        reinterpret_cast<std::uint8_t*>(&s) + sizeof(SerializedWorldInformation)
+    );
 
     // Chunk positions
-    finalByteArray.insert(finalByteArray.end(), (std::uint8_t*)&chunkPositions, (std::uint8_t*)&chunkPositions + (chunks.size() * 3 * sizeof(int)));
-    
-    // Append each chunk to the end
-    for (int i=0; i<chunks.size(); i++) {
-        finalByteArray.insert(finalByteArray.end(), chunkData[i].begin(), chunkData[i].end());
-    }
+    finalByteArray.insert(
+        finalByteArray.end(),
+        reinterpret_cast<std::uint8_t*>(chunkPositions.get()),
+        reinterpret_cast<std::uint8_t*>(chunkPositions.get()) + (chunks.size() * 3 * sizeof(int))
+    );
 
-    delete[] chunkData;
-    delete[] chunkPositions;
+    // Append each chunk to the end
+    for (const auto& chunk : chunkData) {
+        finalByteArray.insert(finalByteArray.end(), chunk.begin(), chunk.end());
+    }
 
     return finalByteArray;
 }
@@ -84,61 +90,79 @@ std::vector<std::uint8_t> World::serialize() {
 void World::deserialize(const std::vector<std::uint8_t>& data) {
     const std::uint8_t* ptr = data.data();
 
-    // Read the header in
-    SerializedWorldInformation s = *(SerializedWorldInformation*)ptr;
+    // Read the header (SerializedWorldInformation)
+    SerializedWorldInformation s;
+    std::memcpy(&s, ptr, sizeof(SerializedWorldInformation));
     ptr += sizeof(SerializedWorldInformation);
-    
-    ChunkCoordinates* chunkPositions = new ChunkCoordinates[s.numberOfChunks];
-    std::uint8_t* chunkData = new std::uint8_t[s.numberOfChunks * Chunk::ChunkSerializedSize];
 
-    for (int i=0; i<s.numberOfChunks; i++) {
-        // read chunk
-        int x = *(int*)ptr;
+    // Allocate memory for chunk positions
+    std::unique_ptr<ChunkCoordinates[]> chunkPositions(new ChunkCoordinates[s.numberOfChunks]);
+
+    // Read chunk positions
+    for (int i = 0; i < s.numberOfChunks; i++) {
+        int x, y, z;
+        std::memcpy(&x, ptr, sizeof(int));
         ptr += sizeof(int);
 
-        int y = *(int*)ptr;
+        std::memcpy(&y, ptr, sizeof(int));
         ptr += sizeof(int);
 
-        int z = *(int*)ptr;
+        std::memcpy(&z, ptr, sizeof(int));
         ptr += sizeof(int);
 
-        chunkPositions[i] = ChunkCoordinates { x, y, z };
+        chunkPositions[i] = ChunkCoordinates{x, y, z};
     }
 
-    // Pointer is now advanced to the chunk data section
-    for (int i=0; i<s.numberOfChunks; i++) {
-        memcpy(&chunkData[i * Chunk::ChunkSerializedSize], ptr, Chunk::ChunkSerializedSize);
-        ptr += Chunk::ChunkSerializedSize;
-    }
-
-    // Insert chunks into world
-    for (int i=0; i<s.numberOfChunks; i++) {
+    // Read and deserialize each chunk
+    for (int i = 0; i < s.numberOfChunks; i++) {
         auto c = std::make_shared<Chunk>();
-        c->deserialize(&chunkData[i * Chunk::ChunkSerializedSize]);
-        
-        chunks.insert({ chunkPositions[i], std::move(c) });
+        c->deserialize(ptr);  // Assuming Chunk::deserialize reads the data directly from the pointer
+        ptr += Chunk::ChunkSerializedSize;
+
+        chunks.insert({chunkPositions[i], std::move(c)});
     }
 
-    delete[] chunkPositions;
-    delete[] chunkData;
+    // No need to delete chunkPositions since it is managed by std::unique_ptr
 }
 
 void World::generateWorld() {
-    // Make one chunk
-    Chunk c;
-    for (int x=0; x<16; x++) {
-        for (int z=0; z<16; z++) {
-            for (int y=0; y<15; y++) {
-                c.setBlock(Position{ x, y, z }, Block(0));
-            }
-        }
-    }
+    auto c = std::make_shared<Chunk>();
 
-    for (int x=0; x<16; x++) {
-        for (int z=0; z<16; z++) {
-            c.setBlock(Position{ x, 15, z }, Block(1));
-        }
-    }
+    c->setBlock(Position{ 0, 0, 0 }, Block(1));
+    c->setBlock(Position{ 1, 0, 0 }, Block(1));
+    c->setBlock(Position{ 2, 0, 0 }, Block(1));
+
+    c->setBlock(Position{ 1, 1, 0 }, Block(1));
+    c->setBlock(Position{ 1, 2, 0 }, Block(1));
+    c->setBlock(Position{ 1, 3, 0 }, Block(1));
+
+
+    chunks[ChunkCoordinates{ 0, 0, 0 }] = std::move(c);
+
+    // for (int cx=0; cx < 3; cx++) {
+    //     for (int cz=0; cz < 3; cz++) {
+    //         for (int cy=0; cy < 3; cy++) {
+    //             // Make one chunk
+    //             auto c = std::make_shared<Chunk>();
+
+    //             for (int x=0; x<16; x++) {
+    //                 for (int z=0; z<16; z++) {
+    //                     for (int y=0; y<15; y++) {
+    //                         c->setBlock(Position{ x, y, z }, Block(1));
+    //                     }
+    //                 }
+    //             }
+
+    //             for (int x=0; x<16; x++) {
+    //                 for (int z=0; z<16; z++) {
+    //                     c->setBlock(Position{ x, 15, z }, Block(2));
+    //                 }
+    //             }
+
+    //             chunks[ChunkCoordinates{ cx, cy, cz }] = std::move(c);
+    //         }
+    //     }
+    // }
 }
 
 const std::map<ChunkCoordinates, std::shared_ptr<Chunk>>& World::getChunks() const {

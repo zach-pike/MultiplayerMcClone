@@ -11,9 +11,9 @@ set(IMGUI_SOURCE
     imgui/backends/imgui_impl_glfw.cpp
     imgui/backends/imgui_impl_opengl3.cpp
 )
-add_library(IMGui STATIC ${IMGUI_SOURCE})
-target_include_directories(IMGui AFTER PUBLIC ./imgui/)
-target_include_directories(IMGui AFTER PUBLIC ./)
+add_library(ImGui STATIC ${IMGUI_SOURCE})
+target_include_directories(ImGui AFTER PUBLIC ./imgui/)
+target_include_directories(ImGui AFTER PUBLIC ./)
 
 # ASIO
 set(ASIO_SOURCE asio/asio/src/asio.cpp)

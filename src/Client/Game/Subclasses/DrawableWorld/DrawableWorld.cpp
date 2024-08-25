@@ -4,6 +4,17 @@
 
 #include "DrawableChunk/DrawableChunk.hpp"
 
+void DrawableWorld::convertChunksToDrawableChunks() {
+    for (auto& currentChunk : chunks) {
+        // Create a DrawableChunk
+        auto newChunk = std::make_shared<DrawableChunk>(currentChunk.second);
+
+        // release the old chunk
+        // currentChunk.second.reset();
+        chunks[currentChunk.first] = newChunk;
+    }
+}
+
 DrawableWorld::DrawableWorld() {}
 DrawableWorld::~DrawableWorld() {}
 
@@ -27,28 +38,13 @@ void DrawableWorld::renderWorld(std::unique_ptr<WorldRenderInfo>& renderInfo, gl
 }
 
 void DrawableWorld::generateWorld() {
-    for (int cx=0; cx < 3; cx++) {
-        for (int cz=0; cz < 3; cz++) {
-            for (int cy=0; cy < 3; cy++) {
-                // Make one chunk
-                auto c = std::make_shared<DrawableChunk>();
+    World::generateWorld();
 
-                for (int x=0; x<16; x++) {
-                    for (int z=0; z<16; z++) {
-                        for (int y=0; y<15; y++) {
-                            c->setBlock(Position{ x, y, z }, Block(1));
-                        }
-                    }
-                }
+    convertChunksToDrawableChunks();
+}
 
-                for (int x=0; x<16; x++) {
-                    for (int z=0; z<16; z++) {
-                        c->setBlock(Position{ x, 15, z }, Block(2));
-                    }
-                }
+void DrawableWorld::deserialize(const std::vector<std::uint8_t>& d) {
+    World::deserialize(d);
 
-                chunks[ChunkCoordinates{ cx, cy, cz }] = std::move(c);
-            }
-        }
-    }
+    convertChunksToDrawableChunks();
 }

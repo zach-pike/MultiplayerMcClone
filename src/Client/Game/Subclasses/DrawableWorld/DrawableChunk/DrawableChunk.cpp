@@ -1,10 +1,12 @@
 #include "DrawableChunk.hpp"
 
+#include <iostream>
+
 #include "../DrawableWorld.hpp"
 
 static const Block::Face cullingFaces[] = { Block::Face::NegativeX, Block::Face::PositiveX,
                                       Block::Face::NegativeY, Block::Face::PositiveY,
-                                      Block::Face::NegativeZ, Block::Face::NegativeZ };
+                                      Block::Face::NegativeZ, Block::Face::PositiveZ };
 
 struct CullingOffset {
     int x, y, z;
@@ -24,16 +26,32 @@ static T mod(T a, T b) {
     return (a % b + b) % b;
 }
 
-DrawableChunk::DrawableChunk() {
+void DrawableChunk::initBuffers() {
     glGenBuffers(1, &vertexIndexBuffer);
     glGenBuffers(1, &vertexPositionBuffer);
     glGenBuffers(1, &vertexTextureBuffer);
 }
 
-DrawableChunk::~DrawableChunk() {
+void DrawableChunk::uninitBuffers() {
     glDeleteBuffers(1, &vertexIndexBuffer);
     glDeleteBuffers(1, &vertexPositionBuffer);
     glDeleteBuffers(1, &vertexTextureBuffer);
+}
+
+DrawableChunk::DrawableChunk() {
+    initBuffers();
+}
+
+DrawableChunk::DrawableChunk(const std::shared_ptr<Chunk>& c) {
+    // Copy blocks over
+    blocks = c->getBlocks();
+
+    // Continue on in initialization
+    initBuffers();
+}
+
+DrawableChunk::~DrawableChunk() {
+    uninitBuffers();
 }
 
 void DrawableChunk::drawChunk(ChunkCoordinates cc, const DrawableWorld& world) {
@@ -107,8 +125,10 @@ void DrawableChunk::drawChunk(ChunkCoordinates cc, const DrawableWorld& world) {
     
     for (int i=0; i<Chunk::ChunkBlockCount; i++) {
         glm::vec3 p = ReverseChunkIndexFormula(Chunk::ChunkX, Chunk::ChunkZ, i);
+        Block b = getBlock(Position{ (int)p.x, (int)p.y, (int)p.z });
 
-        addBlock(p, 0);
+        if (b.blockID != Block(0))
+            addBlock(p, b.blockID - 1);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vertexIndexBuffer);

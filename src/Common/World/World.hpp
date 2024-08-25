@@ -12,6 +12,7 @@ public:
     struct SerializedWorldInformation {
         int numberOfChunks;
 
+        SerializedWorldInformation();
         SerializedWorldInformation(int nChunks);
     };
 protected:
@@ -24,7 +25,7 @@ public:
     virtual Block getBlock(Position pos) const;
 
     std::vector<std::uint8_t> serialize();
-    void deserialize(const std::vector<std::uint8_t>&);
+    virtual void deserialize(const std::vector<std::uint8_t>&);
 
     virtual void generateWorld();
 
