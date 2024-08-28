@@ -24,5 +24,10 @@ target_compile_definitions(ASIO PRIVATE ASIO_SEPARATE_COMPILATION)
 
 target_include_directories(ASIO AFTER PUBLIC ./asio/asio/include/)
 
+# Zlib
+file(GLOB ZLIB_SOURCE zlib/*.c)
+add_library(ZLib STATIC ${ZLIB_SOURCE})
+target_include_directories(ZLib AFTER PUBLIC ./zlib/)
+
 add_subdirectory(src/)
 add_subdirectory(lib/)

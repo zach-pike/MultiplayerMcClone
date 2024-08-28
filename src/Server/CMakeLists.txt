@@ -9,7 +9,7 @@ add_executable(Server ${SERVER_SOURCE_FILES})
 target_include_directories(Server AFTER PUBLIC .)
 
 IF(WIN32)
-    target_link_libraries(Server STBImage ASIO wsock32 ws2_32 bcrypt Common)
+    target_link_libraries(Server STBImage ASIO wsock32 ws2_32 bcrypt Common ZLib)
 else()
     target_link_libraries(Server STBImage ASIO Common)
 endif()
