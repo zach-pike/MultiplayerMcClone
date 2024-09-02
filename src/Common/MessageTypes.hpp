@@ -35,3 +35,11 @@ struct MessageHeader {
         dataSize = msg.data.size();
     }
 };
+
+struct Vec3fPosition {
+    float x, y, z;
+};
+
+struct Vec3iPosition {
+    std::int32_t x, y, z;
+};

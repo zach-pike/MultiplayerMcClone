@@ -1,5 +1,7 @@
 #include "GameServer/GameServer.hpp"
 
+#include "Common/Serialize/Serializer.hpp"
+
 int main() {
 	GameServer server(1500);
 	

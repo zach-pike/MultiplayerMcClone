@@ -9,8 +9,12 @@ void BaseGameServer::acceptConnection() {
             acceptConnection();
         }
 
+        auto conn = std::make_shared<Client>(std::move(sock));
+
         // No error
-        connections.push_back(std::make_shared<Client>(std::move(sock)));
+        connections.push_back(conn);
+
+        onConnect(conn);
 
         acceptConnection();
     });

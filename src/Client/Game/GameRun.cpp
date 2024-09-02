@@ -20,6 +20,94 @@
 
 #include "Subclasses/DrawableWorld/DrawableWorld.hpp"
 
+#include "Common/GameMessages/GameMessageTypes.hpp"
+#include "Common/GameMessages/Connection/Connect/SCConnectInfo/SCConnectInfo.hpp"
+#include "Common/GameMessages/Connection/Connect/CSConnectInfo/CSConnectInfo.hpp"
+#include "Common/GameMessages/Player/CSUpdatePlayerInfo/CSUpdatePlayerInfo.hpp"
+#include "Common/GameMessages/Player/SCPlayerData/SCPlayerData.hpp"
+
+#include "Common/MessagePreprocessor/MessagePreprocessor.hpp"
+
+#include "Utility/ShaderLoaders/VertexFragment/VertexFragment.hpp"
+
+static const GLfloat playerVertexData[] = { 
+	-1.0f,-1.0f,-1.0f,
+	-1.0f,-1.0f, 1.0f,
+	-1.0f, 1.0f, 1.0f,
+	 1.0f, 1.0f,-1.0f,
+	-1.0f,-1.0f,-1.0f,
+	-1.0f, 1.0f,-1.0f,
+	 1.0f,-1.0f, 1.0f,
+	-1.0f,-1.0f,-1.0f,
+	 1.0f,-1.0f,-1.0f,
+	 1.0f, 1.0f,-1.0f,
+	 1.0f,-1.0f,-1.0f,
+	-1.0f,-1.0f,-1.0f,
+	-1.0f,-1.0f,-1.0f,
+	-1.0f, 1.0f, 1.0f,
+	-1.0f, 1.0f,-1.0f,
+	 1.0f,-1.0f, 1.0f,
+	-1.0f,-1.0f, 1.0f,
+	-1.0f,-1.0f,-1.0f,
+	-1.0f, 1.0f, 1.0f,
+	-1.0f,-1.0f, 1.0f,
+	 1.0f,-1.0f, 1.0f,
+	 1.0f, 1.0f, 1.0f,
+	 1.0f,-1.0f,-1.0f,
+	 1.0f, 1.0f,-1.0f,
+	 1.0f,-1.0f,-1.0f,
+	 1.0f, 1.0f, 1.0f,
+	 1.0f,-1.0f, 1.0f,
+	 1.0f, 1.0f, 1.0f,
+	 1.0f, 1.0f,-1.0f,
+	-1.0f, 1.0f,-1.0f,
+	 1.0f, 1.0f, 1.0f,
+	-1.0f, 1.0f,-1.0f,
+	-1.0f, 1.0f, 1.0f,
+	 1.0f, 1.0f, 1.0f,
+	-1.0f, 1.0f, 1.0f,
+	 1.0f,-1.0f, 1.0f
+};
+
+static const GLfloat playerUVData[] = { 
+	0.000059f, 1.0f-0.000004f, 
+	0.000103f, 1.0f-0.336048f, 
+	0.335973f, 1.0f-0.335903f, 
+	1.000023f, 1.0f-0.000013f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.999958f, 1.0f-0.336064f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.336024f, 1.0f-0.671877f, 
+	0.667969f, 1.0f-0.671889f, 
+	1.000023f, 1.0f-0.000013f, 
+	0.668104f, 1.0f-0.000013f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.000059f, 1.0f-0.000004f, 
+	0.335973f, 1.0f-0.335903f, 
+	0.336098f, 1.0f-0.000071f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.335973f, 1.0f-0.335903f, 
+	0.336024f, 1.0f-0.671877f, 
+	1.000004f, 1.0f-0.671847f, 
+	0.999958f, 1.0f-0.336064f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.668104f, 1.0f-0.000013f, 
+	0.335973f, 1.0f-0.335903f, 
+	0.667979f, 1.0f-0.335851f, 
+	0.335973f, 1.0f-0.335903f, 
+	0.668104f, 1.0f-0.000013f, 
+	0.336098f, 1.0f-0.000071f, 
+	0.000103f, 1.0f-0.336048f, 
+	0.000004f, 1.0f-0.671870f, 
+	0.336024f, 1.0f-0.671877f, 
+	0.000103f, 1.0f-0.336048f, 
+	0.336024f, 1.0f-0.671877f, 
+	0.335973f, 1.0f-0.335903f, 
+	0.667969f, 1.0f-0.671889f, 
+	1.000004f, 1.0f-0.671847f, 
+	0.667979f, 1.0f-0.335851f
+};
+
 void Game::init() {
     if (!glfwInit()) {
         std::cout << "Failed to init GLFW!\n";
@@ -70,6 +158,32 @@ void Game::loop() {
     char hostIPAddress[20] = "127.0.0.1";
     int  hostPort = 1500;
 
+    char username[20] = "Zachary";
+
+    int i = 0;
+
+    std::vector<std::string> playerNames;
+    std::vector<Vec3fPosition> playerPositions;
+
+    // Player renderer
+    auto playerShader = loadVertexFragmentShader("./shader/player/");
+    playerShader->use();
+    GLuint playerMVPUniform = playerShader->getUniformLocation("MVP");
+
+    bool networkReady = false;
+
+
+    GLuint pVertexBuffer, pUVBuffer, pPositionBuffer;
+    glGenBuffers(1, &pVertexBuffer);
+    glGenBuffers(1, &pUVBuffer);
+    glGenBuffers(1, &pPositionBuffer);
+
+    glBindBuffer(GL_ARRAY_BUFFER, pVertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(playerVertexData), playerVertexData, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, pUVBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(playerUVData), playerUVData, GL_STATIC_DRAW);
+
     double lastFrameStartTime = glfwGetTime();
     float aspectRatio;
     while(!glfwWindowShouldClose(window) && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS) {
@@ -97,6 +211,15 @@ void Game::loop() {
         // Camera controller logic
         cameraController.step(window, deltaTime);
 
+        if (client.isConnected() && networkReady) {
+            // Send player info
+            auto info = std::make_shared<MessageTypes::CSUpdatePlayerInfo>();
+            auto pos = cameraController.getCamera().pos;
+            info->setPosition(Vec3fPosition{ pos.x, pos.y, pos.z });
+
+            client.sendMessage(processMessage(info));
+        }
+
         // Drawing code
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -105,6 +228,7 @@ void Game::loop() {
         if (ImGui::Begin("Multiplayer")) {
             ImGui::InputText("Host IP", hostIPAddress, sizeof(hostIPAddress));
             ImGui::InputInt("Host port", &hostPort);
+            ImGui::InputText("Username", username, sizeof(username));
 
 
             if (!client.isConnected()) {
@@ -128,24 +252,55 @@ void Game::loop() {
         // render world
         world->renderWorld(worldRenderInfo, viewProjection);
 
-        if (client.isConnected()) {
-            ImGui::Begin("Server menu");
+        // Setup for player render
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
 
-            if (ImGui::Button("Request vertex data!")) {
-                client.sendMessage(Message(1337));
-            }
+        glBindBuffer(GL_ARRAY_BUFFER, pVertexBuffer);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-            ImGui::End();
-        }
+        glBindBuffer(GL_ARRAY_BUFFER, pUVBuffer);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        glBindBuffer(GL_ARRAY_BUFFER, pPositionBuffer);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Vec3fPosition)*playerPositions.size(), playerPositions.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+        playerShader->use();
+        glUniformMatrix4fv(playerMVPUniform, 1, GL_FALSE, &viewProjection[0][0]);
+
+        glVertexAttribDivisor(2, 1);
+
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 36, playerPositions.size());
+
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
 
         // Check client for messages
         while(client.isMessageAvailable()) {
             Message m = client.getMessage();
 
-            switch(m.id) {
-                case 1337: {
-                    world->deserialize(m.data);
-                    world->drawWorld();
+            auto t = (MessageTypes::GameMessageType)m.id;
+
+            switch(t) {
+                case MessageTypes::GameMessageType::SC_Connect_Info: {
+                    // Send Username
+                    auto info = std::make_shared<MessageTypes::CSConnectInfo>();
+                    info->setUsername(username);
+
+                    client.sendMessage(processMessage(info));
+
+                    networkReady = true;
+                } break;
+
+                case MessageTypes::GameMessageType::SC_Player_Data: {
+                    auto info = std::make_shared<MessageTypes::SCPlayerData>();
+                    info->deserialize(m.data);
+
+                    playerNames = info->getPlayerUsernames();
+                    playerPositions = info->getPlayerPositions();
                 } break;
             }
         }

@@ -126,43 +126,30 @@ void World::deserialize(const std::vector<std::uint8_t>& data) {
 }
 
 void World::generateWorld() {
-    auto c = std::make_shared<Chunk>();
+    for (int cx=0; cx < 3; cx++) {
+        for (int cz=0; cz < 3; cz++) {
+            for (int cy=0; cy < 3; cy++) {
+                // Make one chunk
+                auto c = std::make_shared<Chunk>();
 
-    c->setBlock(Position{ 0, 0, 0 }, Block(1));
-    c->setBlock(Position{ 1, 0, 0 }, Block(1));
-    c->setBlock(Position{ 2, 0, 0 }, Block(1));
+                for (int x=0; x<16; x++) {
+                    for (int z=0; z<16; z++) {
+                        for (int y=0; y<15; y++) {
+                            c->setBlock(Position{ x, y, z }, Block(1));
+                        }
+                    }
+                }
 
-    c->setBlock(Position{ 1, 1, 0 }, Block(1));
-    c->setBlock(Position{ 1, 2, 0 }, Block(1));
-    c->setBlock(Position{ 1, 3, 0 }, Block(1));
+                for (int x=0; x<16; x++) {
+                    for (int z=0; z<16; z++) {
+                        c->setBlock(Position{ x, 15, z }, Block(2));
+                    }
+                }
 
-
-    chunks[ChunkCoordinates{ 0, 0, 0 }] = std::move(c);
-
-    // for (int cx=0; cx < 3; cx++) {
-    //     for (int cz=0; cz < 3; cz++) {
-    //         for (int cy=0; cy < 3; cy++) {
-    //             // Make one chunk
-    //             auto c = std::make_shared<Chunk>();
-
-    //             for (int x=0; x<16; x++) {
-    //                 for (int z=0; z<16; z++) {
-    //                     for (int y=0; y<15; y++) {
-    //                         c->setBlock(Position{ x, y, z }, Block(1));
-    //                     }
-    //                 }
-    //             }
-
-    //             for (int x=0; x<16; x++) {
-    //                 for (int z=0; z<16; z++) {
-    //                     c->setBlock(Position{ x, 15, z }, Block(2));
-    //                 }
-    //             }
-
-    //             chunks[ChunkCoordinates{ cx, cy, cz }] = std::move(c);
-    //         }
-    //     }
-    // }
+                chunks[ChunkCoordinates{ cx, cy, cz }] = std::move(c);
+            }
+        }
+    }
 }
 
 const std::map<ChunkCoordinates, std::shared_ptr<Chunk>>& World::getChunks() const {

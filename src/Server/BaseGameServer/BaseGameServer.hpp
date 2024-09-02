@@ -9,6 +9,8 @@
 #include <iostream>
 
 class BaseGameServer {
+protected:
+    virtual void onConnect(std::shared_ptr<Client> client) = 0;
 private:
     asio::io_context        ctx;
     std::thread             networkThread;
